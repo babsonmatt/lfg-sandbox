@@ -1,0 +1,33 @@
+{
+  "name": "wow",
+  "module": "index.ts",
+  "type": "module",
+  "scripts": {
+    "deploy": "gears-api index.js",
+    "caddy": "/Users/matt/Downloads/caddy_2.7.6_mac_amd64/caddy run --config Caddyfile"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/eventsource": "^1.1.15"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@elysiajs/cors": "^0.8.0",
+    "@elysiajs/eden": "^0.8.1",
+    "@elysiajs/stream": "^0.8.0",
+    "@hono/node-server": "^1.7.0",
+    "@redis/gears-api": "https://gitpkg.now.sh/RedisGears/RedisGears/js_api",
+    "@repeaterjs/pubsub": "^0.3.4",
+    "elysia": "^0.8.16",
+    "eventsource": "^2.0.2",
+    "hono": "latest",
+    "immer": "^10.0.3",
+    "ioredis": "^5.3.2",
+    "mitata": "^0.1.10",
+    "p-queue": "^8.0.1",
+    "p-throttle": "^6.1.0",
+    "react-use-websocket": "^4.5.0"
+  }
+}

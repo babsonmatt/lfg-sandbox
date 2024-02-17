@@ -1,0 +1,8 @@
+lfg.local/api/* {
+	uri strip_prefix /api
+	reverse_proxy localhost:8080	
+}
+
+lfg.local {
+	reverse_proxy localhost:3000	
+}
