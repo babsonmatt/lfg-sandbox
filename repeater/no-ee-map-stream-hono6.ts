@@ -10,6 +10,7 @@ import {
 } from "hono/cookie";
 // import { serve } from "@hono/node-server";
 import Redis from "ioredis";
+import type { Server } from "bun";
 // import { enableMapSet, produce } from "immer";
 
 // enableMapSet();
@@ -25,7 +26,11 @@ const pub = new Redis({ keyPrefix: redisKeyPrefix });
 
 sub.psubscribe(`${redisKeyPrefix}*`);
 
-const app = new Hono();
+const app = new Hono<{
+  Bindings: {
+    server: Server;
+  };
+}>();
 app.use(logger());
 
 class ConnectionManager {
@@ -43,10 +48,12 @@ class ConnectionManager {
       this.handlersByChannel.get(channel)?.add(handler) ?? new Set([handler])
     );
 
-    this.channelsBySsid.set(
-      ssid,
-      this.channelsBySsid.get(ssid)?.add(channel) ?? new Set([channel])
-    );
+    this.addChanneltoSsid(channel, ssid);
+
+    // this.channelsBySsid.set(
+    //   ssid,
+    //   this.channelsBySsid.get(ssid)?.add(channel) ?? new Set([channel])
+    // );
 
     this.channelsByHandler.set(
       handler,
@@ -279,6 +286,18 @@ app.use(async (c, next) => {
   await next();
 });
 
+app.get("/ws/:app", async (c) => {
+  console.log("sub", c.env);
+  if (
+    !c.env.server.upgrade(c.req.raw, {
+      data: "im some data for association",
+    })
+  ) {
+    return new Response("not upgraded", { status: 400 });
+  }
+  return new Response();
+});
+
 app.get("/subscribe/:channel", async (c) => {
   const ssid = getCookie(c, "ssid");
   const channel = c.req.param("channel");
@@ -319,9 +338,31 @@ setInterval(() => {
   publishMessageToChannel("message-user-test", "NEW SUB!!");
 }, 1000);
 
-export default app;
+Bun.serve({
+  port: process.env.PORT || 3000,
+  fetch: (req: Request, server: Server) => {
+    return app.fetch(req, {
+      server,
+    });
+  },
+  websocket: {
+    message(ws, msg) {
+      console.log("got message", ws.data, msg);
+    },
+    open(ws) {
+      console.log("websocket opened", ws.data);
+    },
+    close(ws, code, reason) {
+      console.log("websocket closed", ws.data, code, reason);
+    },
+    ping(ws) {
+      console.log("ping", ws.data);
+    },
+  },
+});
+
+// export default app;
 
 // serve(app);
-
 
 // TODO: need to maintain list of channels per ssid/user in redis to use when clients reconnect
