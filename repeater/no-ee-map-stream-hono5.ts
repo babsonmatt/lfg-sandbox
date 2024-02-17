@@ -10,9 +10,13 @@ import {
 } from "hono/cookie";
 // import { serve } from "@hono/node-server";
 import Redis from "ioredis";
-import { enableMapSet, produce } from "immer";
+// import { enableMapSet, produce } from "immer";
 
-enableMapSet();
+// enableMapSet();
+
+const appDashboard = {
+  activeConnections: 0,
+};
 
 const redisKeyPrefix = "lfg:";
 
@@ -231,6 +235,7 @@ async function handleSSE(c: Context, stream: SSEStreamingApi) {
   const ssid = getCookie(c, "ssid");
   const s = new ReadableStream({
     start(controller) {
+      appDashboard.activeConnections++;
       const handler = (message: any) => {
         controller.enqueue(message);
       };
@@ -240,6 +245,7 @@ async function handleSSE(c: Context, stream: SSEStreamingApi) {
         cm.removeHandlerFromSsid(ssid!, handler);
         controller.close();
         stream.close();
+        appDashboard.activeConnections--;
       });
 
       // c.set("caca", "a");
